@@ -54,8 +54,8 @@ def get_lat_long(place_name):
     # print url
     # break
     response_data = get_json(url)
-    latitude = response_data["results"][0]["geometry"]["location"]['lat']
-    longitude = response_data["results"][0]["geometry"]["location"]['lng']
+    latitude = str(response_data["results"][0]["geometry"]["location"]['lat'])
+    longitude = str(response_data["results"][0]["geometry"]["location"]['lng'])
     return (latitude,longitude)
 
 def get_nearest_station(latitude, longitude):
@@ -67,11 +67,11 @@ def get_nearest_station(latitude, longitude):
     formatting requirements for the 'stopsbylocation' API.
     """
     pass
-    url = MBTA_BASE_URL + '&key=' + MBTA_DEMO_API_KEY + 'lat=' + str(latitude) + '&lon=' + str(longitude) + '&format=json/'
+    url = MBTA_BASE_URL + '&key=' + MBTA_DEMO_API_KEY + '&lat=' + latitude + '&lon=' + longitude + '&format=json/'
     # nearby = stopsbylocation(latitude,longitude)
     nearby = get_json(url)
-    station_name = nearby['stop'][0]['stop_name']
-    distance = nearby['stop'][0]['distance']
+    station_name = str(nearby['stop'][0]['stop_name'])
+    distance = str(nearby['stop'][0]['distance'])
     return (station_name,distance)
 
 
