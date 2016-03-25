@@ -11,22 +11,23 @@ import urllib   # urlencode function
 import urllib2  # urlopen function (better than urllib version)
 import json
 
-
-# Useful URLs (you need to add the appropriate parameters for your requests)
-GMAPS_BASE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
-MBTA_BASE_URL = "http://realtime.mbta.com/developer/api/v2/stopsbylocation"
-MBTA_DEMO_API_KEY = "wX9NwuHnZU2ToO7GmGR9uw"
-
-
-# A little bit of scaffolding if you want to use it
+# Useful URLs
+gmaps_base_url = "https://maps.googleapis.com/maps/api/geocode/json"
+mbta_base_url = "http://realtime.mbta.com/developer/api/v2/stopsbylocation"
+mbta_api_key = "wX9NwuHnZU2ToO7GmGR9uw"
 
 def get_json(url):
     """
     Given a properly formatted URL for a JSON web API request, return
     a Python JSON object containing the response to that request.
     """
-    pass
 
+    f=urllib2.urlopen(url)
+    response_text = f.read()
+    response_data = json.loads(response_text)
+    # pprint (response_data)
+    # print response_data["results"][0]["formatted_address"]
+    return response_data
 
 def get_lat_long(place_name):
     """
@@ -36,8 +37,13 @@ def get_lat_long(place_name):
     See https://developers.google.com/maps/documentation/geocoding/
     for Google Maps Geocode API URL formatting requirements.
     """
-    pass
-
+    new_place_name = place_name.replace(' ', '+')
+    url_of_place = gmaps_base_url + '?address={kwarg}&components=administrative_area:MA|country:US'.format(kwarg=new_place_name)
+    get_info = get_json(url_of_place)
+    lat_coordinate = get_info["results"][0]["geometry"]["location"]["lat"]
+    lon_coordinate = get_info["results"][0]["geometry"]["location"]["lng"]
+    # print (lat,lon)
+    return (lat_coordinate, lon_coordinate)
 
 def get_nearest_station(latitude, longitude):
     """
@@ -47,13 +53,27 @@ def get_nearest_station(latitude, longitude):
     See http://realtime.mbta.com/Portal/Home/Documents for URL
     formatting requirements for the 'stopsbylocation' API.
     """
-    pass
-
+    url_of_station = mbta_base_url + '?api_key={}&lat={}&lon={}&format=json'.format(mbta_api_key, str(latitude), str(longitude))
+    get_info = get_json(url_of_station)
+    station_name = get_info["stop"][0]["stop_name"]
+    dist = get_info["stop"][0]["distance"]
+    formatted_dist = round(float(dist), 2)
+    distance = str(formatted_dist) 
+    # print (station_name, distance)
+    return (station_name, distance)
 
 def find_stop_near(place_name):
     """
     Given a place name or address, print the nearest MBTA stop and the 
     distance from the given place to that stop.
     """
-    pass
+    lat = get_lat_long(place_name)[0]
+    lon = get_lat_long(place_name)[1]
+    # print get_nearest_station(lat,lon)
+    station_name = get_nearest_station(lat, lon) [0]
+    distance = get_nearest_station(lat, lon) [1]
+    return "The closest MBTA stop to %s is %s miles away at %s" % (place_name, distance, station_name)
 
+# command that takes a place name or address as input, finds its latitude/longitude, 
+# and returns the nearest MBTA and its distance from the starting point.
+print find_stop_near('Boston Commons')
