@@ -11,7 +11,6 @@ import urllib   # urlencode function
 import urllib2  # urlopen function (better than urllib version)
 import json
 
-
 # Useful URLs (you need to add the appropriate parameters for your requests)
 GMAPS_BASE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 MBTA_BASE_URL = "http://realtime.mbta.com/developer/api/v2/stopsbylocation"
@@ -25,8 +24,10 @@ def get_json(url):
     Given a properly formatted URL for a JSON web API request, return
     a Python JSON object containing the response to that request.
     """
-    pass
-
+    f = urllib2.urlopen(url)
+    response_text = f.read()
+    response_data = json.loads(response_text)
+    return response_data
 
 def get_lat_long(place_name):
     """
@@ -36,8 +37,12 @@ def get_lat_long(place_name):
     See https://developers.google.com/maps/documentation/geocoding/
     for Google Maps Geocode API URL formatting requirements.
     """
-    pass
-
+    url = GMAPS_BASE_URL + '?' + urllib.urlencode([('address', place_name)])
+    info = get_json(url)
+    location = info["results"][0]["geometry"]["location"]
+    lat = location["lat"]
+    lon = location["lng"]
+    return (lat, lon)
 
 def get_nearest_station(latitude, longitude):
     """
@@ -47,7 +52,18 @@ def get_nearest_station(latitude, longitude):
     See http://realtime.mbta.com/Portal/Home/Documents for URL
     formatting requirements for the 'stopsbylocation' API.
     """
-    pass
+    params = {}
+    params['api_key'] = MBTA_DEMO_API_KEY
+    params['lat'] = latitude
+    params['lon'] = longitude
+
+    url = MBTA_BASE_URL + '?' + urllib.urlencode(params)
+    response = get_json(url)
+    nearest_stop = response['stop'][0]    
+    place_name = nearest_stop['stop_name']
+    distance_to_stop = nearest_stop['distance']
+
+    return (place_name, distance_to_stop)
 
 
 def find_stop_near(place_name):
@@ -55,5 +71,12 @@ def find_stop_near(place_name):
     Given a place name or address, print the nearest MBTA stop and the 
     distance from the given place to that stop.
     """
-    pass
 
+    coordinates = get_lat_long(place_name)
+    nearest_stop = get_nearest_station(coordinates[0], coordinates[1])[0]
+    distance = get_nearest_station(coordinates[0], coordinates[1])[1]
+
+    return "The %s stop is %s mi from the given location, %s"%(nearest_stop, distance, place_name)
+
+
+print find_stop_near("3 Beach St #2, Boston, MA")
